@@ -1,33 +1,22 @@
-#!/bin/bash
-# Custom script to attach an mounted EBS to to a specific dir
-# Has limited error checking and output
-# robert@rightscale.com
+#/bin/bash
+#
+# Package content of application directory and upload it to s3
+# Caution: Will overwrite any existing S3 files without warning!                                                                           
+#
 
-# DEV = <block device e.g. /dev/sdk>
-# MOUNT = <mount point e.g. /mnt/ebs>
+export AWS_SECRET_ACCESS_KEY=$AWS_ACCESS_KEY
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_ID
 
-if [ -z "$DEV" ] || [ -z "$MOUNT" ]; then
-        echo "Missing EBS Device or Mount Point."
-        logger -t RightScript: "Error: Missing Script Inputs"
-        exit 1;
-fi
+if [ -d "$APP_DIR" ]; then
+        cd $APP_DIR
+        tar czf $APPLICATION_NAME *
+        s3cmd put $BUCKET:$APPLICATION_NAME $APPLICATION_NAME
+        rm $APPLICATION_NAME
+        logger -t RightScript "Uploaded $APPLICATION_NAME to S3 bucket $BUCKET" 
+        exit 0                                                   
 
-
-if [ -b "$DEV" ]; then
-        echo "Found Attached Volume: $DEV"
-        if [ -d "$MOUNT" ]; then
-                echo "Mount Point Already created: $MOUNT"
-                echo "Exiting"
-                logger -t RightScript "Error: Mount Point Already Created."
-                exit 1
-        else
-        echo "Creating directory: $MOUNT"
-                mkdir $MOUNT
-                logger -t RightScript "Success: Creating directory $MOUNT."
-                echo "Mounting EBS"
-                logger -t RightScript "Success: Mounting EBS $DEV."
-                mount $DEV $MOUNT
-                exit 0
-        fi
-fi
-
+else
+        echo "Error entering directory $APP_DIR"
+        echo "Aborting"                                                                                                                    
+        exit 1
+fi                            
