@@ -1,0 +1,36 @@
+#!/bin/bash
+# Custom script to attach an mounted EBS to to a specific dir
+# Has limited error checking and output
+# robert@rightscale.com
+
+# DEV = <block device e.g. /dev/sdk>
+# MOUNT = <mount point e.g. /mnt/ebs>
+
+if [ -z "$DEV" ] || [ -z "$MOUNT" ]; then
+        echo "Missing EBS Device or Mount Point."
+        logger -t RightScript: "Error: Missing Script Inputs"
+        exit 1;
+fi
+
+
+if [ -b "$DEV" ]; then
+        echo "Found Attached Volume: $DEV"
+        if [ -d "$MOUNT" ]; then
+                echo "Mount Point Already created: $MOUNT"
+                echo "Exiting"
+                logger -t RightScript "Error: Mount Point Already Created."
+                exit 1
+        else
+        echo "Creating directory: $MOUNT"
+                mkdir $MOUNT
+                logger -t RightScript "Success: Creating directory $MOUNT."
+                echo "Mounting EBS"
+                logger -t RightScript "Success: Mounting EBS $DEV."
+                mount $DEV $MOUNT
+                exit 0
+        fi
+fi
+~                                                                                                                                              
+~                                                                                                                                              
+~                                                                                                                                              
+~                                                                          

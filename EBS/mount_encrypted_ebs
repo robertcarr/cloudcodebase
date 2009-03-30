@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# Mount encrypted EBS volume
+#
+
+echo $PASSPHRASE | cryptsetup create $LOGICAL $DEVICE
+if [ ! -d $MNT_POINT ]; then
+   mkdir $MNT_POINT
+fi
+
+mount /dev/mapper/$LOGICAL $MNT_POINT     
