@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# 
+# Pull clone of existing git repository
+# Git must already be installed
+
+$GIT_REPO=                                                                                                 
+$REPO_INSTALL_DIR=                                                                                         
+
+yum install -y $ATTACH_DIR/*.rpm
+
+# Clone and existing repo and install into directory $REPO_INSTALL_DIR
+git clone $GIT_REPO $REPO_INSTALL_DIR
+

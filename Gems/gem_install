@@ -1,0 +1,4 @@
+#!/bin/bash
+gem sources -a http://gems.github.com 
+gem install grempe-ruby-rapleaf
+
