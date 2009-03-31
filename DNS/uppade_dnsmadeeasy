@@ -1,0 +1,6 @@
+#!/bin/bash
+# Update any DNS record ID easily
+
+wget "https://www.dnsmadeeasy.com/servlet/updateip?username=$USERNAME&password=$PASSWORD&id=$DNSID&ip=$IP"
+
+
