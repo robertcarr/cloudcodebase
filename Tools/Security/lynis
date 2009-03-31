@@ -1,0 +1,12 @@
+!#/bin/bash
+
+##
+##
+$LYNIS_PACKAGE=lynis-1.2.1.tar.gz
+$LYNIS_URL="http://www.rootkit.nl/files/"
+wget --directory-prefix=$LYNIS_DIR $LYNIS_URL$LYNIS_PACKAGE
+cd $LYNIS_DIR
+tar xvf $LYNIS_PACKAGE
+cd $LYNIS_PACKAGE
+
+
