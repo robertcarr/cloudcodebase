@@ -1,0 +1,3 @@
+#!/bin/bash
+sed -i 's/AllowOverrides None/AllowOverrides All/g' /etc/httpd/rightscale.d/*.vhost
+logger -t RightScript "Apache:AllowOverrides -> All"
