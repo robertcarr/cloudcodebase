@@ -1,0 +1,21 @@
+#!/bin/bash
+yum -y install xinetd
+cat > /etc/xinetd.d/gssftp << EOF
+service ftp
+{
+        flags           = REUSE
+        socket_type     = stream        
+        wait            = no
+        user            = root
+        server          = /usr/kerberos/sbin/ftpd
+        server_args     = -l
+        log_on_failure  += USERID
+        disable         = no
+}
+EOF
+service xinetd restart
+useradd $FTP_USR
+cat << EOF | passwd $FTP_USR
+$FTP_PWD
+$FTP_PWD
+EO

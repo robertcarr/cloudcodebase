@@ -1,0 +1,5 @@
+#!/bin/bash
+# Comments out Listen [port] so multiple vhosts can be configured properly
+#
+sed -i 's/Listen/#Listen/' /etc/httpd/rightscale.d/*.vhost
+
