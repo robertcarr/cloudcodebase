@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+BASEDIR=/usr/share/phpMyAdmin/
+sed -i '/AllowRoot/,/TRUE/s/TRUE/FALSE/g' $BASEDIR/config.inc.php
+
