@@ -1,7 +1,2 @@
 #!/bin/bash
-
-openssl req \
-  -x509 -nodes -days 365 \
-  -newkey rsa:1024 -keyout mycert.pem -out mycert.pem
-
-
+openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout www.example.com.pem  -out www.example.com.pem
