@@ -1,0 +1,76 @@
+ightscale 2009 
+##
+## 
+
+## RightScale default directories
+META_DIR=/var/spool/ec2/meta-data
+EC2_TOOLS_DIR=/home/ec2
+
+## Device EBS snapshot will be attached as
+#DEVICE=/dev/sdk
+#SNAPSHOT_ID=snap-f84abb91
+#ATTACH=/home
+#MOUNT_TO=/mnt/ebs
+
+## Not used as script inputs
+INSTANCE_ID=$(cat $META_DIR/instance-id)	# Current instance amazon instance-id
+X509_CERT=cert.pem
+X509_KEY=key.pem
+A_ZONE=$(cat $META_DIR/placement-availability-zone)
+SLEEPTIME=20
+
+
+##
+## Check that tools are installed, certs are accessible, etc
+##
+
+if ! [ -d "$EC2_TOOLS_DIR" ]; then
+	echo "EC2_TOOLS_DIR not found: $EC2_TOOLS_DIR"
+	exit 1;
+else
+	echo "Tools Found"
+	export EC2_HOME=$EC2_TOOLS_DIR
+	export PATH=$PATH:$EC2_TOOLS_DIR/bin
+fi
+
+if ! [ -e "$ATTACH_DIR/$X509_CERT" ] || ! [ -e "$ATTACH_DIR/$X509_KEY" ]; then
+	echo "Missing credentials in $ATTACH_DIR"
+	exit 1;
+else
+	echo "Credentials Found"
+	export EC2_CERT=$ATTACH_DIR/$X509_CERT
+	export EC2_PRIVATE_KEY=$ATTACH_DIR/$X509_KEY
+fi
+
+
+##
+## Create a volume based on snapshot id in the current instance availability zone
+##
+
+echo "Creating volume from snapshot $SNAPSHOT_ID"
+RESULTS=$(ec2-create-volume --availability-zone $A_ZONE --snapshot $SNAPSHOT_ID)
+VOLUME_ID=$(echo $RESULTS |  grep -o 'vol-\(.[^ ]*\)')
+echo "New volume created $VOLUME_ID"
+
+##
+## Attach the volume to the current instance
+##
+
+echo "Attaching volume: $VOLUME_ID to $INSTANCE_ID:$DEVICE"
+ec2-attach-volume $VOLUME_ID --instance $INSTANCE_ID --device $DEVICE
+
+## Generic wait for volume to attach & register.  Replace with something more elegant.
+sleep $SLEEPTIME
+
+##
+## Mount Attached volume to the instance where specified
+##
+
+echo "Mounting $DEVICE to $MOUNT_TO"
+
+	echo "Mounting to $MOUNT_TO"
+	mkdir -p $MOUNT_TO
+	mount $DEVICE $MOUNT_TO
+
+
+
