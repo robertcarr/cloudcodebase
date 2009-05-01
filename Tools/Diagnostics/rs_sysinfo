@@ -1,0 +1,179 @@
+#!/bin/bash
+# (c) copyright RightScale, Inc. 2009
+# 
+# System Dump
+# robert@rightscale.com
+
+div_banner="==============="
+version="V.5 2009"
+
+# Common Directories
+dir_mysql=/var/lib/mysql
+dir_httpd=/etc/httpd
+dir_etc=/etc
+
+# Common Files
+file_mysql=/etc/my.cnf
+file_users=/etc/passwd
+
+# Command checks
+cmd_check_mysql=$(which mysql)
+cmd_check_ruby=$(which ruby)
+cmd_check_php=$(which php)
+cmd_check_http=$(which httpd)
+cmd_check_haproxy=$(which haproxy)
+cmd_check_rails=$(which rails)
+cmd_check_gems=$(which gem)
+
+# Defined commands
+cmd_ps="ps -eo user,command"
+cmd_services="service --status-all"
+cmd_ports="ss -an"
+cmd_df="df -m"
+cmd_mysql_size="du -ch $dir_mysql"
+cmd_mysql_status="mysqladmin extended variables"
+cmd_iptables="iptables --list"
+cmd_dir_etc="ls -sl $dir_etc/"
+cmd_php_version="php -v"
+cmd_php_modules="php -m"
+cmd_rpm="rpm -qa"
+cmd_users="cat $file_users"
+cmd_free="free -m"
+cmd_vmstat="vmstat"
+cmd_uptime="uptime"
+cmd_kernel="uname -ar"
+cmd_if="ifconfig"
+cmd_route="route"
+cmd_crontasks="ls /etc/cron.*"
+cmd_sysctl="sysctl -a"
+cmd_proc_meminfo="cat /proc/meminfo"
+cmd_proc_cpuinfo="cat /proc/cpuinfo"
+cmd_date="date"
+cmd_whoami="whoami"
+cmd_groups="groups"
+cmd_hostname="hostname"
+
+echo $div_banner
+echo "RightScale System & Configuration Profiler"
+echo -e "Version:\t $version"
+echo -e "Date:\t\t $($cmd_date)"
+echo -e "Hostname:\t $($cmd_hostname)"
+echo -e "whoami:\t\t $($cmd_whoami)"
+echo $div_banner 
+
+function banner() {
+	echo 
+	echo $div_banner 
+	echo $1
+	echo $div_banner
+	echo
+}
+
+
+###
+### Start System Checks
+###
+
+banner "Quick Profile"
+
+if ! [ -z $cmd_check_php ]; then echo -e "PHP:\t $($cmd_check_php -v)"; else echo -e "PHP:\t No"; fi
+if ! [ -z $cmd_check_ruby ]; then echo -e "Ruby:\t $($cmd_check_ruby -v)"; else echo -e  "Ruby:\t No"; fi
+if ! [ -z $cmd_check_gems ]; then echo -e "GEMS:\t $($cmd_check_gems -v)"; else echo -e "GEMS:\t No"; fi
+if ! [ -z $cmd_check_rails ]; then echo -e "Rails:\t $($cmd_check_rails -v)"; else echo -e "Rails:\t No"; fi
+if ! [ -z $cmd_check_mysql ]; then echo -e "mySQL:\t $($cmd_check_mysql -V)"; else echo -e "mySQL:\t No"; fi
+if ! [ -z $cmd_check_http ]; then echo -e "HTTP:\t $($cmd_check_mysql -v)"; else echo -e "HTTP:\t No"; fi
+
+echo -e "Kernel:\t $($cmd_kernel)"
+echo 
+($cmd_free)
+echo
+($cmd_df)
+echo
+($cmd_ports)
+echo
+echo
+
+
+banner "Running Processes: ($cmd_ps)"
+($cmd_ps)
+
+banner "User Accounts: ($cmd_users)"
+($cmd_users)
+
+banner "Group Accounts: ($cmd_groups)"
+($cmd_groups)
+
+banner "Open Ports: ($cmd_ports)"
+($cmd_ports)
+
+banner "Running Services: ($cmd_services)"
+$($cmd_services | grep running)
+
+banner "Packages Installed: ($cmd_rpm)"
+($cmd_rpm)
+
+banner "df information ($cmd_df)"
+($cmd_df)
+
+banner "Free Memory/vmstat ($cmd_free) ($cmd_vmstat)"
+($cmd_free)
+echo
+($cmd_vmstat)
+
+banner "Kernel Version ($cmd_kernel) ($cmd_uptime)"
+($cmd_kernel)
+($cmd_uptime)
+
+banner "Interfaces ($cmd_if)"
+($cmd_if)
+
+banner "Routing Table ($cmd_route)"
+($cmd_route)
+
+banner "Iptables ($cmd_iptables)"
+($cmd_iptables)
+
+banner "Known crontasks ($cmd_crontasks)"
+($cmd_crontasks)
+
+banner "Directory: $dir_etc"
+($cmd_dir_etc)
+
+banner "Current sysctl: net. vm. kernel. fs. ($cmd_sysctl)"
+($cmd_sysctl | grep net.)
+($cmd_sysctl | grep kernel.)
+($cmd_sysctl | grep vm.)
+($cmd_sysctl | grep fs.)
+
+banner "/proc cpuinfo & meminfo"
+($cmd_proc_meminfo)
+echo
+($cmd_proc_cpuinfo)
+
+banner "mySQL Info"
+if ! [ -z "$cmd_check_mysql" ]; then
+	($cmd_mysql_size)
+	($cmd_mysql_status)
+	($cmd_mysql -v )
+else
+	echo "No mySQL Found"
+fi
+
+banner "PHP Info"
+if ! [ -z "$cmd_check_php" ]; then
+	($cmd_check_php -v)
+	($cmd_check_php -m)
+else
+	echo "PHP not found"
+fi
+
+banner "Ruby Info"
+if ! [ -z "$cmd_check_ruby" ]; then
+	($cmd_check_ruby -v)
+	echo
+else
+	echo "Ruby not found"
+fi
+
+if ! [ -z "$cmd_check_gems" ]; then ($cmd_check_gems list); fi
+
