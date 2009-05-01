@@ -4,7 +4,7 @@
 # System Dump
 # robert@rightscale.com
 
-div_banner="==============="
+div_banner="======================================================"
 version="V.5 2009"
 
 # Common Directories
@@ -24,6 +24,9 @@ cmd_check_http=$(which httpd)
 cmd_check_haproxy=$(which haproxy)
 cmd_check_rails=$(which rails)
 cmd_check_gems=$(which gem)
+cmd_check_rpm=$(which rpm)
+cmd_check_apt=$(which apt-get)
+cmd_check_yum=$(which yum)
 
 # Defined commands
 cmd_ps="ps -eo user,command"
@@ -83,6 +86,13 @@ if ! [ -z $cmd_check_rails ]; then echo -e "Rails:\t $($cmd_check_rails -v)"; el
 if ! [ -z $cmd_check_mysql ]; then echo -e "mySQL:\t $($cmd_check_mysql -V)"; else echo -e "mySQL:\t No"; fi
 if ! [ -z $cmd_check_http ]; then echo -e "HTTP:\t $($cmd_check_mysql -v)"; else echo -e "HTTP:\t No"; fi
 
+echo
+echo "Pacakge Managers: "
+if ! [ -z  "$cmd_check_yum" ]; then echo -e "YUM:\t Found"; fi
+if ! [ -z  "$cmd_check_apt" ]; then echo -e "APT:\t Found"; fi
+if ! [ -z  "$cmd_check_rpm" ]; then echo -e "RPM:\t Found"; fi
+
+echo
 echo -e "Kernel:\t $($cmd_kernel)"
 echo 
 ($cmd_free)
@@ -106,11 +116,11 @@ banner "Group Accounts: ($cmd_groups)"
 banner "Open Ports: ($cmd_ports)"
 ($cmd_ports)
 
-banner "Running Services: ($cmd_services)"
-$($cmd_services | grep running)
+banner "Known Services: ($cmd_services)"
+($cmd_services)
 
 banner "Packages Installed: ($cmd_rpm)"
-($cmd_rpm)
+if ! [ -z "$cmd_check_rpm" ]; then ($cmd_rpm);else echo "RPM not found";fi
 
 banner "df information ($cmd_df)"
 ($cmd_df)
@@ -176,4 +186,19 @@ else
 fi
 
 if ! [ -z "$cmd_check_gems" ]; then ($cmd_check_gems list); fi
+
+banner "HTTP Info"
+
+if ! [ -z "$cmd_check_ruby" ]; then
+	($cmd_check_http -v)
+	echo
+	($cmd_check_http -M)
+	echo
+	$(grep DocumentRoot /etc/httpd/*.conf)
+else
+	echo "HTTP: Not Found"
+fi
+
+
+
 
