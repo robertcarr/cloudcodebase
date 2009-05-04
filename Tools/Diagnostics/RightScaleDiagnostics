@@ -1,0 +1,296 @@
+
+#!/bin/bash
+# (c) copyright RightScale, Inc. 2009
+#
+# System Configuration Report
+# robert@rightscale.com
+#
+# Dumps a bunch of useful data about the server into a text file and uploads the file to S3.
+
+
+div_banner="======================================================"
+version="v.9"
+
+# Common Files
+file_mysql=/etc/my.cnf
+file_users=/etc/passwd
+file_out=report.txt
+
+# S3 Account Information
+s3_bucket="rsconfigreports"
+s3_upload_append_string="report"
+s3_url="https://$s3_bucket.s3.amazonaws.com/"
+s3_redirect="http://www.google.com"
+s3_signature="ofZBsOURG+jS2STGJIGD3UQAzB0="
+s3_AWSKey="068S8XY7J4FFK4111Y02"
+s3_acl=private
+s3_policy=eyJjb25kaXRpb25zIjogW3siYnVja2V0IjogInJzY29uZmlncmVwb3J0cyJ9LCB7ImFjbCI6ICJwcml2YXRlIn0sIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwgWyJzdGFydHMtd2l0aCIsICIkQ29udGVudC1UeXBlIiwgIiJdLCBbInN0YXJ0cy13aXRoIiwgIiRzdWNjZXNzX2FjdGlvbl9yZWRpcmVjdCIsICIiXV0sICJleHBpcmF0aW9uIjogIjI1MDAtMDEtMDFUMTI6MDA6MDAuMDAwWiJ9
+
+# Common Directories
+dir_mysql=/var/lib/mysql/
+dir_httpd=/etc/httpd
+dir_etc=/etc
+
+
+# Command checks
+cmd_check_mysql=$(which mysql 2>/dev/null)
+cmd_check_ruby=$(which ruby 2>/dev/null)
+cmd_check_php=$(which php 2>/dev/null)
+cmd_check_http=$(which httpd 2>/dev/null)
+cmd_check_haproxy=$(which haproxy 2>/dev/null)
+cmd_check_rails=$(which rails 2>/dev/null)
+cmd_check_gems=$(which gem 2>/dev/null)
+cmd_check_rpm=$(which rpm 2>/dev/null)
+cmd_check_apt=$(which apt-get 2>/dev/null)
+cmd_check_yum=$(which yum 2>/dev/null)
+cmd_check_curl=$(which curl 2>/dev/null)
+
+# Defined commands
+cmd_ps="ps -eo user,command"
+cmd_services="service --status-all"
+cmd_ports="ss -an"
+cmd_df="df -m"
+cmd_mysql=$cmd_check_mysql
+cmd_mysql_size="du -ch $dir_mysql"
+cmd_mysql_status="mysqladmin extended variables"
+cmd_iptables="iptables --list"
+cmd_dir_etc="ls -sl $dir_etc/"
+cmd_php_version="php -v"
+cmd_php_modules="php -m"
+cmd_rpm="rpm -qa"
+cmd_users="cat $file_users"
+cmd_free="free -m"
+cmd_vmstat="vmstat"
+cmd_uptime="uptime"
+cmd_kernel="uname -ar"
+cmd_if="ifconfig"
+cmd_route="route"
+cmd_crontasks="ls /etc/cron.*"
+cmd_sysctl="sysctl -a"
+cmd_proc_meminfo="cat /proc/meminfo"
+cmd_proc_cpuinfo="cat /proc/cpuinfo"
+cmd_date="date"
+cmd_whoami="whoami"
+cmd_groups="groups"
+cmd_hostname="hostname"
+
+if [ -e $file_out ]; then
+       mv $file_out "$file_out.bak"
+fi
+
+echo
+echo $div_banner >> $file_out
+echo "RightScale System & Configuration Profile" >> $file_out
+echo -e "Date:\t\t $($cmd_date)" >> $file_out
+echo -e "Hostname:\t $($cmd_hostname)" >> $file_out
+echo -e "whoami:\t\t $($cmd_whoami)" >> $file_out
+echo $div_banner  >> $file_out
+
+if [ -z $quietmode ]; then
+clear
+echo $div_banner
+echo "RightScale Configuration Report"
+echo "(c) RightScale 2009"
+echo "Version $version"
+echo $div_banner
+echo
+echo "The configuration report will be written to $file_out"
+echo "A copy of this report will also be sent directly to RightScale."
+echo
+echo "Enter Company Name or Unique Identifier [no spaces/punctuation]"
+read business_name
+echo
+fi
+
+if [ -z $business_name ]; then business_name="unknown"; fi
+
+function banner() {
+
+       echo  >> $file_out
+       echo $div_banner >> $file_out
+       echo $1 >> $file_out
+       echo $div_banner >> $file_out
+       echo >> $file_out
+       echo -ne "."
+}
+
+
+###
+### Start System Checks
+###
+
+echo -ne "Working."
+banner "Quick Profile"
+
+if ! [ -z $cmd_check_php ]; then echo -e "PHP:\t $($cmd_check_php -v)" >> $file_out; else echo -e "PHP:\t No " >> $file_out; fi
+if ! [ -z $cmd_check_ruby ]; then echo -e "Ruby:\t $($cmd_check_ruby -v)" >> $file_out; else echo -e  "Ruby:\t No " >>$file_out; fi
+if ! [ -z $cmd_check_gems ]; then echo -e "GEMS:\t $($cmd_check_gems -v)" >> $file_out; else echo -e "GEMS:\t No" >> $file_out; fi
+if ! [ -z $cmd_check_rails ]; then echo -e "Rails:\t $($cmd_check_rails -v)" >> $file_out; else echo -e "Rails:\t No " >>$file_out; fi
+#if ! [ -z $cmd_check_http ]; then echo -e "HTTP:\t $($cmd_check_mysql -v)" >> $file_out; else echo -e "HTTP:\t No"  >> $file_out; fi
+if ! [ -z $cmd_check_mysql ]; then
+       echo -e "mySQL:\t $($cmd_check_mysql -V)" >> $file_out
+       echo >> $file_out
+       echo "Database Sizes:" >> $file_out
+       $($cmd_mysql_size >> $file_out)
+       echo >> $file_out
+       else echo -e "mySQL:\t No " >>$file_out; fi
+
+
+echo >> $file_out
+echo "Pacakge Managers: " >> $file_out
+if ! [ -z  "$cmd_check_yum" ]; then echo -e "YUM:\t Found" >> $file_out; fi
+if ! [ -z  "$cmd_check_apt" ]; then echo -e "APT:\t Found" >> $file_out; fi
+if ! [ -z  "$cmd_check_rpm" ]; then echo -e "RPM:\t Found" >> $file_out; fi
+
+echo >> $file_out
+echo -e "Kernel:\t $($cmd_kernel)" >> $file_out
+echo >> $file_out
+
+($cmd_free >> $file_out)
+echo >> $file_out
+($cmd_df >> $file_out)
+echo >> $file_out
+($cmd_ports >> $file_out)
+echo >> $file_out
+echo >> $file_out
+
+
+banner "Running Processes: ($cmd_ps)"
+($cmd_ps >> $file_out)
+
+banner "User Accounts: ($cmd_users)"
+($cmd_users >> $file_out)
+
+banner "Group Accounts: ($cmd_groups)"
+($cmd_groups >> $file_out)
+
+banner "Open Ports: ($cmd_ports)"
+($cmd_ports >> $file_out)
+
+banner "Known Services: ($cmd_services)"
+($cmd_services 2>/dev/null >> $file_out)
+
+banner "Packages Installed: ($cmd_rpm)"
+if ! [ -z "$cmd_check_rpm" ]; then ($cmd_rpm >> $file_out);else echo "RPM not found" >> $file_out;fi
+
+banner "df information ($cmd_df)"
+($cmd_df >> $file_out)
+
+banner "Free Memory/vmstat ($cmd_free) ($cmd_vmstat)"
+($cmd_free >> $file_out)
+echo >> $file_out
+($cmd_vmstat >> $file_out)
+
+banner "Kernel Version ($cmd_kernel) ($cmd_uptime)"
+($cmd_kernel >> $file_out)
+($cmd_uptime >> $file_out)
+
+banner "Interfaces ($cmd_if)"
+($cmd_if >> $file_out)
+
+banner "Routing Table ($cmd_route)"
+($cmd_route >> $file_out)
+
+banner "Iptables ($cmd_iptables)"
+($cmd_iptables >> $file_out)
+
+banner "Known crontasks ($cmd_crontasks)"
+($cmd_crontasks $file_out >> $file_out)
+
+banner "Directory: $dir_etc"
+($cmd_dir_etc >> $file_out)
+
+banner "Current sysctl: net. vm. kernel. fs. ($cmd_sysctl)"
+($cmd_sysctl 2>/dev/null | grep net. 1>> $file_out )
+($cmd_sysctl 2>/dev/null | grep kernel. 1>> $file_out )
+($cmd_sysctl 2>/dev/null | grep vm. 1>> $file_out )
+($cmd_sysctl 2>/dev/null | grep fs. 1>> $file_out )
+
+banner "/proc cpuinfo & meminfo"
+($cmd_proc_meminfo >> $file_out)
+echo >> $file_out
+($cmd_proc_cpuinfo >> $file_out)
+
+banner "mySQL Info"
+if ! [ -z "$cmd_check_mysql" ]; then
+       ($cmd_mysql_size >> $file_out)
+       ($cmd_mysql_status >> $file_out)
+       ($cmd_mysql -V >> $file_out)
+else
+       echo "No mySQL Found" >> $file_out
+fi
+
+banner "PHP Info"
+if ! [ -z "$cmd_check_php" ]; then
+       ($cmd_check_php -v >> $file_out)
+       ($cmd_check_php -m >> $file_out)
+else
+       echo "PHP not found" >> $file_out
+fi
+
+banner "Ruby Info"
+if ! [ -z "$cmd_check_ruby" ]; then
+       ($cmd_check_ruby -v >> $file_out)
+       echo >> $file_out
+else
+       echo "Ruby not found" >> $file_out
+fi
+
+if ! [ -z "$cmd_check_gems" ]; then ($cmd_check_gems list >> $file_out); fi
+
+banner "HTTP Info"
+
+if ! [ -z "$cmd_check_http" ]; then
+       ($cmd_check_http -v >> $file_out)
+       echo >> $file_out
+       $($cmd_check_http -M 2>> $file_out)
+       echo >> $file_out
+       $($cmd_check_http -t -D DUMP_VHOSTS 2>> $file_out)
+       echo >> $file_out
+       echo "DocumentRoot" >> $file_out
+       $(grep DocumentRoot /etc/httpd/*/*.* >> $file_out)
+else
+       echo "HTTP: Not Found" >> $file_out
+fi
+
+###
+### Upload report to S3
+###
+
+now=$(date "+%Y%m%d%H%M%S")
+s3_upload_filename="$business_name-$s3_upload_append_string-$now.txt"
+s3_curl="
+-F "key=$s3_upload_filename"
+-F "content-type=application/octet-stream"
+-F "AWSAccessKeyId=$s3_AWSKey"
+-F "acl=$s3_acl"
+-F "policy=$s3_policy"
+-F "signature=$s3_signature"
+-F "bucket=$s3_bucket"
+-F "success_action_redirect=$s3_redirect"
+-F "file=@$file_out"
+$s3_url"
+
+echo "Done!"
+echo
+
+if ! [ -z $cmd_check_curl ]; then
+       echo "Uploading report to RightScale as [$s3_upload_filename]"
+       curl $s3_curl
+else
+       echo "Error: cannot locate CURL.  Unable to send report to RightScale."
+       echo "You can send $file_out to RightScale manually."
+fi
+
+if [ -z $quietmode ]; then
+echo
+echo -ne "Would you like to view the report [y/N]? "
+read input
+if [ "$input" == "y" ]; then
+       more $file_out
+fi
+fi
+
+echo
+echo "Thank-You. Program Completed. End of Line."
+echo
