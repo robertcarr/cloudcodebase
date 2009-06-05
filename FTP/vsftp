@@ -1,0 +1,15 @@
+#! /bin/bash
+# Set compatibility so that you can connect 
+modprobe capability
+
+# Turn off anonymous enable
+sed -i "s/anonymous_enable\=\YES/anonymous_enable\=\NO/g" /etc/vsftpd/vsftpd.conf
+
+service vsftpd restart
+
+# Create user
+useradd $FTP_USR
+cat << EOF | passwd $FTP_USR
+$FTP_PWD
+$FTP_PWD
+EOF
