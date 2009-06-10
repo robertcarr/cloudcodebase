@@ -1,5 +1,11 @@
-myhostname = www.idonowidont.com
-mydomain = idonowidont.com
+##
+## Postfix main.cf 
+## AUTHSMTP basic mail relay configuration file
+## Replaces /etc/postfix/main.cf
+
+
+myhostname = www.<DOMAIN NAME>.com
+mydomain = <DOMAIN NAME>.com
 myorigin = $mydomain
 
 smtpd_banner = $myhostname ESMTP $mail_name
@@ -20,7 +26,7 @@ inet_interfaces = all
 relayhost = [mail.authsmtp.com]
 smtp_connection_cache_destinations = mail.authsmtp.com
 smtp_sasl_auth_enable = yes
-smtp_sasl_password_maps = static:ac42384:pxpk9fgsu
+smtp_sasl_password_maps = static:<REPLACE WITH AUTHSMTP USERNAME>:<REPLACE WITH AUTHSMTP PASSWORD>
 smtp_sasl_security_options = noanonymous
 
 default_destination_concurrency_limit = 4
