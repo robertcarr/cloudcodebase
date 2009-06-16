@@ -1,0 +1,8 @@
+#!/bin/bash
+# Centos/Redhat specific
+#
+
+echo no | pear install pecl/apc
+echo extension=apc.so > /etc/php.d/apc.ini
+service httpd graceful
+
