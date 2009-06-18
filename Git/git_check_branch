@@ -1,0 +1,19 @@
+#!/bin/bash -e
+#
+# Copyright (c) 2007-2009 RightScale, Inc, All Rights Reserved Worldwide.
+# Robert Carr
+#
+
+if [ -d "$GIT_CHECKOUT_DIRECTORY" ] && [ -e "$GIT_CHECKOUT_DIRECTORY/.git" ]; then
+    cd $GIT_CHECKOUT_DIRECTORY
+    git checkout $GIT_CHECKOUT_BRANCH
+    logger -t RightScale "GIT checkout branch $GIT_CHECKOUT_BRANCH"
+    echo "git checkout $GIT_CHECKOUT_BRANCH performed"
+    exit 0
+else
+    echo "Directory $current_dir not found or not a valid git repository"
+    exit 1
+fi
+
+
+
