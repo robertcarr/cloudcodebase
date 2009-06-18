@@ -1,0 +1,12 @@
+#!/bin/bash
+# Ubuntu doesn't default to interactive prompts for the following commands.
+# This could cause problems.
+# Robert Carr @ RightScale
+
+
+cat<<EOF>>/root/.bashrc
+alias rm="rm -i"
+alias mv="mv -i"
+alias cp="cp -i"
+EOF
+
