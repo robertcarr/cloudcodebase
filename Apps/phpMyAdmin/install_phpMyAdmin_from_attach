@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+tar zxvf $ATTACH_DIR/phpMyAdmin-3.2.0-all-languages.tar.gz -C /home
+ln -s /home/phpMyAdmin-3.2.0-all-languages/ /mnt/webapps/$APPLICATION/current/dbadmin
+cp /mnt/webapps/$APPLICATION/current/dbadmin/config.sample.inc.php /mnt/webapps/$APPLICATION/current/dbadmin/config.inc.php
+
+db_dns=dns_of_db
+sed -i 's/localhost/$db_dns/g' /mnt/webapps/$APPLICATION/current/dbadmin/config.inc.php
+
