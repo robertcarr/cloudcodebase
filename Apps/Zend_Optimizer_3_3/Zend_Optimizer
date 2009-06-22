@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+DIR=/usr/local
+FILE=zend-optimizer-3.3.gz
+cd /
+mv $ATTACH_DIR/$FILE $DIR
+cd $DIR
+tar zxvf $FILE
+rm -f $FILE
+
+cat <<EOF> /etc/php.d/zend.ini
+
+[Zend]
+zend_extension_manager.optimizer=/usr/local/Zend/lib/Optimizer-3.3.3
+zend_extension_manager.optimizer_ts=/usr/local/Zend/lib/Optimizer_TS-3.3.3
+zend_optimizer.version=3.3.3
+zend_extension=/usr/local/Zend/lib/ZendExtensionManager.so
+zend_extension_ts=/usr/local/Zend/lib/ZendExtensionManager_TS.so
+
+EOF
