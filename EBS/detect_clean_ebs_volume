@@ -1,0 +1,25 @@
+#!/bin/bash
+# 
+# RightScale, Inc (c) 2009
+# Robert Carr
+
+# Checks for a empty, unformatted EBS Volume by checking the first 
+# 1M bytes and comparing to zero'd file.
+
+ebs=/dev/sdk
+cd /tmp
+
+# Create 1MB file of zeros
+dd if=/dev/zero of=/tmp/zerofile bs=1M count=1
+
+# Sample first 1MB of EBS volume for diff
+dd  if=$ebs of=/tmp/ebs
+
+diff /tmp/zerofile /tmp/ebs
+
+if (($? !=0)); then
+	echo "$ebs is not empty!"
+	exit 1;
+fi
+
+
