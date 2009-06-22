@@ -1,0 +1,26 @@
+#!/bin/bash
+# RightScale (c) 2009
+# Robert Carr
+#
+# Installs phpMyAdmin and creates a symlink to DocumentRoot/$webdir
+# Also, copies over the config.sample.inc.php to config.inc.php
+# Modifies config.inc.php to connect to $MASTER_DB_DNSNAME
+
+## attached package
+package="phpMyAdmin-3.2.0-all-languages"
+
+## directory added to base URL http://<website>/$webdir
+webdir=dbadmin
+## Apache DocumentRoot
+basedir=/home/webapps/$APPLICATION/current
+
+## Directory packages is unpacked to
+installdir=/home
+
+## Unpack, Create symlink & modify default config file
+tar zxvf $ATTACH_DIR/$package.tar.gz -C $installdir
+ln -s $installdir/$package $basedir/$webdir
+cp $basedir/$webdir/config.sample.inc.php $basedir/$webdir/config.inc.php
+sed -i "s/localhost/$MASTER_DB_DNSNAME/g" $basedir/$webdir/config.inc.php
+
+
