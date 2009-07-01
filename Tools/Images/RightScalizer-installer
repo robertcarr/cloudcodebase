@@ -1,0 +1,75 @@
+#!/bin/bash
+# RightScale 2009
+# Robert Carr
+# Expects the RightScale.zip file
+
+installdir=/root
+sshd_config=/etc/ssh/sshd_config
+envdir=/root/.ssh
+envfile=$envdir/environment
+
+clear
+echo "This script will attempt to install all files necessary to integrate this AMI with RightScale"
+echo
+echo -n "Architecture Type [i386]: "
+read val
+if [ -z $val ]; then val=i386; fi
+export arch=$val
+echo -n "Linux distribution [centos]: "
+read val
+if [ -z $val ]; then val=centos; fi
+export distro=$val
+echo -n "Cloud [ec2]: "
+read val
+if [ -z $val ]; then val=ec2; fi
+export cloud=$val
+echo -n "RightScale Release [v4_3_0]: "
+read val
+if [ -z $val ]; then val=v4_3_0; fi
+export rs_release=$val
+
+files="install_packages install_rightscale install_modules getsshkey"
+echo "Moving files & setting permissions"
+for file in $files
+do
+if [ -e "$file" ]; then
+	chmod +x $file
+	mv -v $file $installdir
+if [ "$file" != "getsshkey" ]; then
+	echo "Running $file"
+	$installdir/$file 
+fi
+fi
+done
+
+if [ -e $sshd_config ]; then
+	echo "Configuring $sshd_config"
+	sed -i 's_#PermitUserEnvironment no_PermitUserEnvironment yes_g' $sshd_config
+else
+	echo "Error: $sshd_config not found."
+	exit 1
+fi
+
+echo "Adding environment variables to $envdir if needed."
+if [ -e $envfile ]; then 
+	result=$(grep -v EC2_HOME $envfile)
+fi
+if [ -z $result ]; then
+cat <<EOF>> $envfile
+EC2_HOME=/home/ec2/
+JAVA_HOME=/usr
+EOF
+fi
+
+echo -n "Restart SSH server [y/N]: "
+read val
+if  ( [ $val == "y" ] || [ $val == "Y" ] ) ; then
+	echo "Restarting sshd."
+	service sshd restart
+fi
+
+echo 
+echo "You may now attempt to bundle your updated AMI in the RightScale dashboard.  Good Luck!"
+echo
+exit 0
+
