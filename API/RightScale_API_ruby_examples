@@ -36,7 +36,8 @@ api =	{	:servers		=> "servers" ,
 		:credentials		=> "credentials",
 		:macros			=> "macros",
 		:servertemplates	=> "server_templates",
-		:rightscripts		=> "right_scripts"
+		:rightscripts		=> "right_scripts",
+		:runscript		=> "run_script"
 	}
 
 
@@ -53,9 +54,9 @@ end
 #####
 
 # Method 1: pass variables
-#username=''
-#password=''
-#account=''
+username='robert@rightscale.com'
+password='K3yst0n3'
+account='7954'
 
 if ! defined? username then
 	puts "You must define user credentials first!"
@@ -76,7 +77,7 @@ rsapi = startAPI(username,password,account)
 
 # Show all servers
 # URL: GET /api/acct/1/servers
-data = rsapi[api[:servers]].get :x_api_version => '1.0'
+#data = rsapi[api[:servers]].get :x_api_version => '1.0'
 
 # Show individual servers
 # URL: GET /api/acct/1/servers/1.xml
@@ -105,6 +106,19 @@ data = rsapi[api[:servers]].get :x_api_version => '1.0'
 # URL:  DELETE /api/acct/1/ec2_ebs_volumes/1 
 #volume=88148
 #data = rsapi[api[:ebs]+"/#{volume}"].delete :x_api_version => '1.0'
+
+# Run RightScript against a server
+# URL: POST /api/acct/1/servers/000/run_script
+#server=
+#params = { "right_script"	=> '1234' }
+#data = rsapi[api[:servers]+"/#{server}/run_script"].post params, :x_api_version => '1.0'
+
+# Start a server
+# URL: POST /api/acct/1/servers/000/start
+#params = {} # pass empty hash
+#server = 1234567
+data = rsapi[api[:servers]+"/#{server}/start"].post params, :x_api_version => '1.0'
+
 
 ###
 ### Dump to console the API results
